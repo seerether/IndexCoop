@@ -1,0 +1,25 @@
+/**
+ * OPERATOR ONLY: Marks a protected module as unprotected and deletes its authorized extension registries.
+ * Removes module from the SetToken. Increments the `emergencies` counter, prohibiting any operator-only module
+ * or extension additions until `emergencyReplaceProtectedModule` is executed or `resolveEmergency` is called by the methodologist.
+ *
+ * Called by the operator when a module must be removed immediately for security reasons and it's unsafe
+ * to wait for a `mutualUpgrade` process to play out.
+ *
+ * NOTE: If removing a fee module, you can ensure all fees are distributed by calling `distribute`
+ * on the module's de-authorized fee extension after this call.
+ *
+ * @param _module    Module to remove
+ */
+function emergencyRemoveProtectedModule(address _module) external onlyOperator {
+    require(protectedModules[_module].isProtected, "Module not protected");
+
+    // Check if there are any authorized extensions for the module
+    require(protectedModules[_module].authorizedExtensionsList.length == 0, "Extensions still authorized for module");
+
+    _unProtectModule(_module);
+    setToken.removeModule(_module);
+    emergencies += 1;
+
+    emit EmergencyRemovedProtectedModule(_module);
+}
