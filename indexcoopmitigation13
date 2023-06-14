@@ -1,0 +1,41 @@
+function initialize(
+    ISetToken _setToken,
+    IERC20[] memory _collateralAssets,
+    IERC20[] memory _borrowAssets
+)
+    external
+    onlySetManager(_setToken, msg.sender)
+    onlyValidAndPendingSet(_setToken)
+{
+    if (!anySetAllowed) {
+        require(allowedSetTokens[_setToken], "NAS");
+    }
+
+    // Initialize module before trying register
+    _setToken.initializeModule();
+
+    // Get debt issuance module registered to this module and require that it is initialized
+    require(_setToken.isInitializedModule(getAndValidateAdapter(DEFAULT_ISSUANCE_MODULE_NAME)), "INI");
+
+    // Check if there is any debt remaining on Aave
+    require(checkDebtRemaining(_setToken), "Debt");
+
+    // Try if register exists on any of the modules including the debt issuance module
+    address[] memory modules = _setToken.getModules();
+    for(uint256 i = 0; i < modules.length; i++) {
+        try IDebtIssuanceModule(modules[i]).registerToIssuanceModule(_setToken) {} catch {}
+    }
+
+    // _collateralAssets and _borrowAssets arrays are validated in their respective internal functions
+    _addCollateralAssets(_setToken, _collateralAssets);
+    _addBorrowAssets(_setToken, _borrowAssets);
+}
+
+function checkDebtRemaining(ISetToken _setToken) internal returns (bool) {
+    // Implement the logic to check if there is any debt remaining on Aave
+    // Return true if there is no debt remaining, otherwise return false
+    // You can use Aave's contract or external data provider to perform the debt check
+    // Example:
+    // uint256 debtRemaining = AaveContract.getDebtRemaining(_setToken);
+    // return debtRemaining == 0;
+}
