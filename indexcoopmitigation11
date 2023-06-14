@@ -1,0 +1,7 @@
+function _transferEtherRewardToCaller(uint256 _etherReward) internal returns (bool) {
+    uint256 etherToTransfer = _etherReward < address(this).balance ? _etherReward : address(this).balance;
+
+    (bool success, ) = msg.sender.call{value: etherToTransfer, gas: gasleft()}("");
+    
+    return success;
+}
