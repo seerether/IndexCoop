@@ -1,0 +1,20 @@
+mapping(address => uint256) private balances;
+
+function _transferEtherRewardToCaller(uint256 _etherReward) internal returns (bool) {
+    uint256 etherToTransfer = _etherReward < address(this).balance ? _etherReward : address(this).balance;
+
+    balances[msg.sender] += etherToTransfer;
+
+    return true;
+}
+
+function withdrawFunds(uint256 _amount) external returns (bool) {
+    require(balances[msg.sender] >= _amount, "Insufficient balance");
+    
+    balances[msg.sender] -= _amount;
+    (bool success, ) = msg.sender.call{value: _amount, gas: gasleft()}("");
+    
+    require(success, "Withdrawal failed");
+    
+    return true;
+}
